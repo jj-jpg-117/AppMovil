@@ -6,13 +6,13 @@ import com.example.myapplication.R
 /**
  * Producto del menú.
  *
- * Los textos se guardan como referencias a recursos (@StringRes)
- * para respetar la localización de Android; el precio siempre
- * se maneja como entero en pesos (nunca como texto).
+ * - [id]: clave estable usada en LazyColumn y en la base de datos.
+ * - Los textos son referencias a recursos (@StringRes) para respetar
+ *   la localización de Android.
+ * - El precio siempre es un entero en pesos (nunca texto).
  */
 data class Producto(
-    // @param: aplica la anotación solo al parámetro del constructor
-    // (silencia el warning KT-73255 de Kotlin sobre el target).
+    val id: String,
     @param:StringRes val nombreRes: Int,
     val emoji: String,
     val precio: Int,
@@ -21,39 +21,28 @@ data class Producto(
 
 /**
  * Catálogo: única fuente de verdad para productos y precios.
- *
- * Antes los precios estaban duplicados como texto ("$20.000")
- * y como números (20000) en pantallas distintas; ahora solo
- * se definen aquí.
+ * Agregar un producto al menú es agregarlo aquí y nada más.
  */
 object Catalogo {
 
     const val PRECIO_ENVIO = 5_000
 
-    val hamburguesa = Producto(
-        nombreRes = R.string.producto_hamburguesa,
-        emoji = "🍔",
-        precio = 20_000,
-        descripcionRes = R.string.producto_hamburguesa_desc
+    val hamburguesa = Producto("hamburguesa", R.string.producto_hamburguesa, "🍔", 20_000, R.string.producto_hamburguesa_desc)
+    val pizza = Producto("pizza", R.string.producto_pizza, "🍕", 12_000, R.string.producto_pizza_desc)
+    val tacos = Producto("tacos", R.string.producto_tacos, "🌮", 15_000, R.string.producto_tacos_desc)
+    val burrito = Producto("burrito", R.string.producto_burrito, "🌯", 14_000, R.string.producto_burrito_desc)
+    val pollo = Producto("pollo", R.string.producto_pollo, "🍗", 18_000, R.string.producto_pollo_desc)
+    val hotdog = Producto("hotdog", R.string.producto_hotdog, "🌭", 8_000, R.string.producto_hotdog_desc)
+    val ensalada = Producto("ensalada", R.string.producto_ensalada, "🥗", 10_000, R.string.producto_ensalada_desc)
+    val papas = Producto("papas", R.string.producto_papas, "🍟", 5_000)
+    val bebida = Producto("bebida", R.string.producto_bebida, "🥤", 4_000)
+    val helado = Producto("helado", R.string.producto_helado, "🍦", 6_000, R.string.producto_helado_desc)
+
+    /** Menú completo mostrado en la conversación (LazyColumn). */
+    val menu: List<Producto> = listOf(
+        hamburguesa, pizza, tacos, burrito, pollo,
+        hotdog, ensalada, papas, bebida, helado
     )
 
-    val papas = Producto(
-        nombreRes = R.string.producto_papas,
-        emoji = "🍟",
-        precio = 5_000
-    )
-
-    val bebida = Producto(
-        nombreRes = R.string.producto_bebida,
-        emoji = "🥤",
-        precio = 4_000
-    )
-
-    /** Producto de muestra aún no disponible para pedir. */
-    val pizza = Producto(
-        nombreRes = R.string.producto_pizza,
-        emoji = "🍕",
-        precio = 0,
-        descripcionRes = R.string.producto_pizza_desc
-    )
+    fun porId(id: String): Producto? = menu.find { it.id == id }
 }

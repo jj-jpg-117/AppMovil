@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import com.example.myapplication.model.Catalogo
+import com.example.myapplication.model.ItemPedido
 import com.example.myapplication.model.ResumenPedido
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -12,24 +13,22 @@ import org.junit.Test
 class ResumenPedidoTest {
 
     @Test
-    fun `subtotal sin complementos solo incluye la hamburguesa`() {
-        val resumen = ResumenPedido(productos = listOf(Catalogo.hamburguesa))
-
-        assertEquals(20_000, resumen.subtotal)
-    }
-
-    @Test
-    fun `subtotal con complementos suma todos los productos`() {
+    fun `subtotal suma precio por cantidad de cada item`() {
         val resumen = ResumenPedido(
-            productos = listOf(Catalogo.hamburguesa, Catalogo.papas, Catalogo.bebida)
+            items = listOf(
+                ItemPedido(Catalogo.hamburguesa, cantidad = 2), // 40.000
+                ItemPedido(Catalogo.papas, cantidad = 1)        //  5.000
+            )
         )
 
-        assertEquals(29_000, resumen.subtotal)
+        assertEquals(45_000, resumen.subtotal)
     }
 
     @Test
     fun `total agrega el costo de envio al subtotal`() {
-        val resumen = ResumenPedido(productos = listOf(Catalogo.hamburguesa))
+        val resumen = ResumenPedido(
+            items = listOf(ItemPedido(Catalogo.hamburguesa, cantidad = 1))
+        )
 
         assertEquals(20_000 + Catalogo.PRECIO_ENVIO, resumen.total)
     }
@@ -37,10 +36,18 @@ class ResumenPedidoTest {
     @Test
     fun `total respeta un envio personalizado`() {
         val resumen = ResumenPedido(
-            productos = listOf(Catalogo.hamburguesa),
+            items = listOf(ItemPedido(Catalogo.hamburguesa, cantidad = 1)),
             precioEnvio = 3_000
         )
 
         assertEquals(23_000, resumen.total)
+    }
+
+    @Test
+    fun `un pedido sin items esta vacio y su subtotal es cero`() {
+        val resumen = ResumenPedido(items = emptyList())
+
+        assertEquals(true, resumen.estaVacio)
+        assertEquals(0, resumen.subtotal)
     }
 }

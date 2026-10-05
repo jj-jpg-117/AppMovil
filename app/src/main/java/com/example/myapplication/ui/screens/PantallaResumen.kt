@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.model.Catalogo
+import com.example.myapplication.model.ItemPedido
+import com.example.myapplication.model.MetodoPago
 import com.example.myapplication.model.ModoTema
 import com.example.myapplication.model.ResumenPedido
 import com.example.myapplication.ui.components.BotonModoTema
@@ -38,6 +40,8 @@ import com.example.myapplication.util.aPrecio
  * Recibe un [ResumenPedido] ya calculado: la pantalla solo
  * muestra datos, no contiene lógica de negocio.
  *
+ * @param direccion dirección escrita en la pantalla de entrega.
+ * @param metodoPago método de pago elegido en la pantalla de entrega.
  * @param onConfirmar navega a la pantalla de confirmación.
  * @param modoTema modo de tema activo (para el botón de cambio).
  * @param onCambiarTema alterna claro → oscuro → automático.
@@ -45,6 +49,8 @@ import com.example.myapplication.util.aPrecio
 @Composable
 fun PantallaResumen(
     resumen: ResumenPedido,
+    direccion: String,
+    metodoPago: MetodoPago,
     onConfirmar: () -> Unit,
     modoTema: ModoTema,
     onCambiarTema: () -> Unit
@@ -84,12 +90,12 @@ fun PantallaResumen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Se genera una fila por producto elegido: agregar un
-            // producto al pedido ya no requiere tocar esta pantalla.
-            resumen.productos.forEach { producto ->
+            // Una fila por ítem: "🍔 Hamburguesa ×2" con su total por línea.
+            resumen.items.forEach { item ->
+                val cantidad = if (item.cantidad > 1) " ×${item.cantidad}" else ""
                 FilaPrecio(
-                    nombre = "${producto.emoji} ${stringResource(producto.nombreRes)}",
-                    precio = producto.precio.aPrecio()
+                    nombre = "${item.producto.emoji} ${stringResource(item.producto.nombreRes)}$cantidad",
+                    precio = item.total.aPrecio()
                 )
             }
 
@@ -125,11 +131,14 @@ fun PantallaResumen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = stringResource(R.string.resumen_direccion),
+                text = stringResource(R.string.resumen_direccion, direccion),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(R.string.resumen_pago),
+                text = stringResource(
+                    R.string.resumen_pago,
+                    stringResource(metodoPago.etiquetaRes)
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -149,8 +158,14 @@ private fun PantallaResumenPreview() {
     OrderBotTheme {
         PantallaResumen(
             resumen = ResumenPedido(
-                productos = listOf(Catalogo.hamburguesa, Catalogo.papas, Catalogo.bebida)
+                items = listOf(
+                    ItemPedido(Catalogo.hamburguesa, cantidad = 1),
+                    ItemPedido(Catalogo.papas, cantidad = 1),
+                    ItemPedido(Catalogo.bebida, cantidad = 1)
+                )
             ),
+            direccion = "Calle 123 #45-67",
+            metodoPago = MetodoPago.EFECTIVO,
             onConfirmar = {},
             modoTema = ModoTema.SISTEMA,
             onCambiarTema = {}

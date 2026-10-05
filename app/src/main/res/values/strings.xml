@@ -30,15 +30,42 @@
     <string name="conversacion_subtitulo">Asistente de pedidos</string>
     <string name="conversacion_saludo">Hola 👋</string>
     <string name="conversacion_pregunta">¿Qué deseas pedir hoy?</string>
+    <string name="conversacion_boton_continuar">Continuar</string>
 
     <!-- Productos del catálogo -->
     <string name="producto_hamburguesa">Hamburguesa</string>
     <string name="producto_hamburguesa_desc">Hamburguesa clásica</string>
     <string name="producto_pizza">Pizza</string>
-    <string name="producto_pizza_desc">Opción disponible próximamente</string>
+    <string name="producto_pizza_desc">Porción familiar</string>
+    <string name="producto_tacos">Tacos</string>
+    <string name="producto_tacos_desc">Tres unidades mexicanas</string>
+    <string name="producto_burrito">Burrito</string>
+    <string name="producto_burrito_desc">Relleno de carne y frijoles</string>
+    <string name="producto_pollo">Pollo broaster</string>
+    <string name="producto_pollo_desc">Crujiente y dorado</string>
+    <string name="producto_hotdog">Hot dog</string>
+    <string name="producto_hotdog_desc">Salchicha americana</string>
+    <string name="producto_ensalada">Ensalada</string>
+    <string name="producto_ensalada_desc">Fresca y saludable</string>
     <string name="producto_papas">Papas</string>
     <string name="producto_bebida">Bebida</string>
+    <string name="producto_helado">Helado</string>
+    <string name="producto_helado_desc">Vainilla y chocolate</string>
     <string name="producto_boton_elegir">Elegir</string>
+
+    <!-- Control de cantidad del catálogo -->
+    <string name="cantidad_agregar">Agregar una unidad</string>
+    <string name="cantidad_quitar">Quitar una unidad</string>
+
+    <!-- Pantalla de datos de entrega -->
+    <string name="entrega_titulo">Datos de entrega</string>
+    <string name="entrega_direccion_titulo">📍 Dirección de entrega</string>
+    <string name="entrega_direccion_placeholder">Ej: Calle 123 #45-67, Apto 801</string>
+    <string name="entrega_metodo_pago_titulo">💳 Método de pago</string>
+    <string name="entrega_boton_continuar">Ver resumen</string>
+    <string name="pago_efectivo">💵 Efectivo</string>
+    <string name="pago_tarjeta">💳 Tarjeta</string>
+    <string name="pago_billetera">📱 Billetera digital</string>
 
     <!-- Pantalla de recomendación -->
     <string name="recomendacion_titulo">¡Excelente elección!</string>
@@ -54,8 +81,9 @@
     <string name="resumen_envio">Envío</string>
     <string name="resumen_total">TOTAL</string>
     <string name="resumen_seccion_entrega">🚚 Entrega</string>
-    <string name="resumen_direccion">Dirección: Por definir</string>
-    <string name="resumen_pago">Pago: Por definir</string>
+    <!-- %1$s se reemplaza por el dato elegido en la pantalla de entrega -->
+    <string name="resumen_direccion">Dirección: %1$s</string>
+    <string name="resumen_pago">Pago: %1$s</string>
     <string name="resumen_boton_confirmar">Confirmar Pedido</string>
 
     <!-- Pantalla de confirmación -->

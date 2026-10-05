@@ -3,7 +3,7 @@
 > ¡Pide fácil, recibe rápido!
 
 Aplicación Android de ejemplo que simula un **asistente de pedidos de comida (chatbot)**
-en un flujo de 5 pantallas, construida 100% con **Kotlin** y **Jetpack Compose**.
+en un flujo de 6 pantallas, construida 100% con **Kotlin** y **Jetpack Compose**.
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)
@@ -23,18 +23,20 @@ pasando por una conversación con el bot, una recomendación de complementos
 flowchart LR
     A["1️⃣ Inicio"] --> B["2️⃣ Conversación"]
     B --> C["3️⃣ Recomendación"]
-    C --> D["4️⃣ Resumen"]
-    D --> E["5️⃣ Confirmación"]
-    E -->|"Volver al inicio"| A
+    C --> D["4️⃣ Entrega"]
+    D --> E["5️⃣ Resumen"]
+    E --> F["6️⃣ Confirmación"]
+    F -->|"Volver al inicio"| A
 ```
 
 | Pantalla | Qué hace el usuario |
 |---|---|
 | **Inicio** | Ve la marca, el eslogan y los beneficios del servicio. |
-| **Conversación** | El bot saluda y el usuario elige un producto del catálogo. |
+| **Conversación** | El bot saluda y el usuario arma su carrito desde el catálogo. |
 | **Recomendación** | El bot ofrece agregar papas 🍟 y bebida 🥤 al pedido. |
-| **Resumen** | Se muestran los productos, subtotal, envío y total. |
-| **Confirmación** | Número de pedido, entrega estimada y estado. |
+| **Entrega** | Escribe su dirección 📍 y elige el método de pago 💳. |
+| **Resumen** | Revisa productos, subtotal, envío, total y datos de entrega. |
+| **Confirmación** | Número de pedido real (id generado por Room), entrega estimada y estado. |
 
 ## 📸 Capturas de pantalla
 
@@ -49,6 +51,9 @@ flowchart LR
 - 🌗 Tema claro y **oscuro** con paleta de marca propia (`OrderBotTheme`), botón para alternar ☀️/🌙/🌗 (automático) y **persistencia** de la elección con DataStore.
 - 🧭 **Navigation Compose 2.9 type-safe**: rutas `@Serializable`, sin strings ni números mágicos.
 - 🧠 **ViewModels con StateFlow** (patrón UDF): el estado del pedido y del tema sobrevive a rotaciones y se comparte entre pantallas.
+- 🍔 **Catálogo completo con `LazyColumn`** y selector de cantidad [−] n [+] por producto.
+- 📍 **Selección de dirección y método de pago** con validación antes de continuar.
+- 🗄️ **Base de datos Room**: pedidos e ítems guardados en una transacción; el número de pedido es el id real generado por SQLite.
 - 💾 Preferencia de tema persistida con **DataStore**.
 - 💰 Precios centralizados en un catálogo: **una sola fuente de verdad**.
 - 🧮 Lógica de negocio (subtotal/total) **separada de la UI** y con pruebas unitarias.
@@ -63,10 +68,11 @@ flowchart LR
 | Lenguaje | Kotlin 2.2.10 + kotlinx-serialization |
 | UI | Jetpack Compose (BOM 2026.02.01) + Material 3 |
 | Navegación | Navigation Compose 2.9 (rutas type-safe `@Serializable`) |
-| Arquitectura | ViewModel + StateFlow (UDF) · DataStore Preferences |
+| Arquitectura | ViewModel + StateFlow (UDF) · Repository · DataStore Preferences |
+| Persistencia | Room 2.7 (SQLite) con KSP |
 | Build | Gradle 9.5 · AGP 9.3.2 · Kotlin DSL |
 | Compatibilidad | minSdk 24 · targetSdk 37 |
-| Pruebas | JUnit 4 (14 pruebas unitarias locales) |
+| Pruebas | JUnit 4 + kotlinx-coroutines-test (17 pruebas unitarias) |
 
 ## 📂 Estructura del proyecto
 
@@ -80,10 +86,16 @@ app/src/main/java/com/example/myapplication/
 │   ├── PedidoViewModel.kt       # Estado del pedido compartido (StateFlow)
 │   └── TemaViewModel.kt         # Modo de tema + persistencia
 ├── data/
-│   └── PreferenciasUsuario.kt   # Persistencia del modo de tema (DataStore)
+│   ├── PreferenciasUsuario.kt   # Persistencia del modo de tema (DataStore)
+│   ├── PedidoRepository.kt      # Puerta de acceso a Room
+│   └── local/
+│       ├── AppDatabase.kt       # @Database con patrón Singleton
+│       ├── PedidoDao.kt         # @Dao: suspend + Flow + @Transaction
+│       └── entities/            # PedidoEntity + ItemPedidoEntity (FK 1:N)
 ├── model/
-│   ├── Producto.kt              # Data class Producto + Catalogo (precios únicos)
-│   ├── ResumenPedido.kt         # Lógica de negocio: subtotal y total
+│   ├── Producto.kt              # Producto + Catalogo (10 productos, precios únicos)
+│   ├── ResumenPedido.kt         # ItemPedido (cantidad) + subtotal y total
+│   ├── MetodoPago.kt            # Enum: EFECTIVO / TARJETA / BILLETERA_DIGITAL
 │   └── ModoTema.kt              # Enum: SISTEMA / CLARO / OSCURO + ciclo
 ├── util/
 │   └── FormatoPrecio.kt         # Int.aPrecio(): 29000 -> "$29.000" (es-CO)
@@ -91,14 +103,16 @@ app/src/main/java/com/example/myapplication/
     ├── components/              # Componentes reutilizables
     │   ├── Botones.kt           #   BotonPrimario / BotonSecundario
     │   ├── BotonModoTema.kt     #   Selector claro/oscuro/automático
+    │   ├── ControlCantidad.kt   #   Selector de cantidad [−] n [+]
     │   ├── OrderBotCard.kt      #   Tarjeta base con estilo unificado
     │   ├── TarjetaBeneficio.kt
     │   ├── TarjetaProducto.kt   #   Con API de "slots" para la acción
     │   └── FilaPrecio.kt
     ├── screens/                 # Un archivo por pantalla
     │   ├── PantallaInicio.kt
-    │   ├── PantallaConversacion.kt
+    │   ├── PantallaConversacion.kt   # Catálogo con LazyColumn
     │   ├── PantallaRecomendacion.kt
+    │   ├── PantallaEntrega.kt        # Dirección + método de pago
     │   ├── PantallaResumen.kt
     │   └── PantallaConfirmacion.kt
     └── theme/                   # Paleta de marca, tema claro/oscuro, tipografía

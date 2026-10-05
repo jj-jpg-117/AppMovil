@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -24,23 +26,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.model.Catalogo
+import com.example.myapplication.model.ItemPedido
 import com.example.myapplication.model.ModoTema
+import com.example.myapplication.model.Producto
 import com.example.myapplication.ui.components.BotonModoTema
+import com.example.myapplication.ui.components.BotonPrimario
+import com.example.myapplication.ui.components.ControlCantidad
 import com.example.myapplication.ui.components.OrderBotCard
 import com.example.myapplication.ui.components.TarjetaProducto
 import com.example.myapplication.ui.theme.OrderBotTheme
 import com.example.myapplication.util.aPrecio
 
 /**
- * Pantalla 2: el bot saluda y muestra el catálogo.
+ * Pantalla 2: el bot saluda y muestra el catálogo completo.
  *
- * @param onSeleccionarProducto navega a la recomendación de complementos.
- * @param modoTema modo de tema activo (para el botón de cambio).
- * @param onCambiarTema alterna claro → oscuro → automático.
+ * El usuario arma su carrito con los controles de cantidad de cada
+ * producto y continúa cuando hay al menos uno.
+ *
+ * La pantalla es "tonta" (stateless): recibe el carrito y notifica
+ * las acciones; el estado vive en el PedidoViewModel.
+ *
+ * @param items productos ya elegidos con su cantidad.
+ * @param onAgregar suma una unidad del producto.
+ * @param onQuitar resta una unidad del producto.
+ * @param onContinuar navega a la recomendación de complementos.
  */
 @Composable
 fun PantallaConversacion(
-    onSeleccionarProducto: () -> Unit,
+    items: List<ItemPedido>,
+    onAgregar: (Producto) -> Unit,
+    onQuitar: (Producto) -> Unit,
+    onContinuar: () -> Unit,
     modoTema: ModoTema,
     onCambiarTema: () -> Unit
 ) {
@@ -72,7 +88,7 @@ fun PantallaConversacion(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Mensaje del bot
         OrderBotCard {
@@ -90,35 +106,54 @@ fun PantallaConversacion(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Producto disponible: los datos vienen del catálogo,
-        // ya no hay precios escritos a mano en la UI.
-        val hamburguesa = Catalogo.hamburguesa
-        TarjetaProducto(
-            emoji = hamburguesa.emoji,
-            nombre = stringResource(hamburguesa.nombreRes),
-            descripcion = hamburguesa.descripcionRes?.let { stringResource(it) },
-            precio = hamburguesa.precio.aPrecio(),
-            accion = {
-                Button(
-                    onClick = onSeleccionarProducto,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(text = stringResource(R.string.producto_boton_elegir))
-                }
+        // Catálogo con scroll: solo compone las filas visibles,
+        // por eso se usa LazyColumn y no una Column con forEach.
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            items(
+                items = Catalogo.menu,
+                // La key estable evita recomposiciones al reordenar.
+                key = { it.id }
+            ) { producto ->
+                val cantidad = items
+                    .firstOrNull { it.producto.id == producto.id }
+                    ?.cantidad ?: 0
+
+                TarjetaProducto(
+                    emoji = producto.emoji,
+                    nombre = stringResource(producto.nombreRes),
+                    descripcion = producto.descripcionRes?.let { stringResource(it) },
+                    precio = producto.precio.aPrecio(),
+                    accion = {
+                        if (cantidad == 0) {
+                            Button(
+                                onClick = { onAgregar(producto) },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(text = stringResource(R.string.producto_boton_elegir))
+                            }
+                        } else {
+                            ControlCantidad(
+                                cantidad = cantidad,
+                                onAgregar = { onAgregar(producto) },
+                                onQuitar = { onQuitar(producto) }
+                            )
+                        }
+                    }
+                )
             }
-        )
+        }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Producto próximamente: reutiliza la misma tarjeta,
-        // sin precio ni botón (antes duplicaba todo el layout).
-        val pizza = Catalogo.pizza
-        TarjetaProducto(
-            emoji = pizza.emoji,
-            nombre = stringResource(pizza.nombreRes),
-            descripcion = pizza.descripcionRes?.let { stringResource(it) }
+        BotonPrimario(
+            texto = stringResource(R.string.conversacion_boton_continuar),
+            onClick = onContinuar,
+            enabled = items.isNotEmpty()
         )
     }
 }
@@ -128,7 +163,10 @@ fun PantallaConversacion(
 private fun PantallaConversacionPreview() {
     OrderBotTheme {
         PantallaConversacion(
-            onSeleccionarProducto = {},
+            items = listOf(ItemPedido(Catalogo.hamburguesa, cantidad = 2)),
+            onAgregar = {},
+            onQuitar = {},
+            onContinuar = {},
             modoTema = ModoTema.SISTEMA,
             onCambiarTema = {}
         )

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     // Necesario para las rutas @Serializable de Navigation type-safe.
     alias(libs.plugins.kotlin.serialization)
+    // Procesador de anotaciones para Room (KSP).
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -53,7 +55,14 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.kotlinx.serialization.json)
+
+    // Room: runtime + extensiones de corrutinas/Flow + compilador KSP.
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -23,13 +23,15 @@ private val RadioBoton = 14.dp
 fun BotonPrimario(
     texto: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(AlturaBoton),
+        enabled = enabled,
         shape = RoundedCornerShape(RadioBoton)
     ) {
         Text(text = texto, fontWeight = FontWeight.Bold)
